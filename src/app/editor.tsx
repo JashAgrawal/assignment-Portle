@@ -26,7 +26,6 @@ const CustomEditor: React.FC = () => {
     return EditorState.createEmpty();
   });
 
-  const [isStyleActive, setIsStyleActive] = useState(false);
   const [tag, setTag] = useState("");
 
   const types = {
@@ -46,12 +45,12 @@ const CustomEditor: React.FC = () => {
 
   const blockStyleFunction = (contentBlock: ContentBlock) => {
     const type = contentBlock.getType();
-    return type;
+    return type || "unstyled";
   };
-
   const removeChars = (editorState: EditorState, length: number) => {
     const selection = editorState.getSelection();
     const currentContent = editorState.getCurrentContent();
+
     const currentBlock = currentContent.getBlockForKey(selection.getStartKey());
     const blockText = currentBlock.getText();
 
@@ -75,6 +74,7 @@ const CustomEditor: React.FC = () => {
   const changeStyle = (editorState: EditorState, style: string) => {
     const selection = editorState.getSelection();
     const currentContent = editorState.getCurrentContent();
+
     const newContent = Modifier.setBlockType(currentContent, selection, style);
 
     const newEditorState = EditorState.push(
@@ -86,32 +86,25 @@ const CustomEditor: React.FC = () => {
     // setEditorState(newEditorState);
   };
 
-  const reset = () => {
-    setIsStyleActive(false);
-    setTag("");
-    setCurrentStyle("");
-  };
-
   const handleBeforeInput = (char: string, editorState: EditorState) => {
     const currentOffset = editorState.getSelection().getStartOffset();
     const isKeyChar = char === "#" || char === "*";
     if (currentOffset === 0) {
       // reseting these to incase user need to change
       setTag("");
-      setIsStyleActive(false);
       if (isKeyChar) {
-        setIsStyleActive(true);
         setTag(char);
       }
     }
 
-    if (isStyleActive && isKeyChar && currentOffset !== 0) {
+    if (tag.length > 0 && isKeyChar && currentOffset !== 0) {
       console.log("add to tag");
       setTag(tag + char);
     }
 
-    if (isStyleActive && char === " ") {
+    if (tag.length > 0 && char === " ") {
       if (handledChars.includes(tag)) {
+        console.log("in");
         const styleName = getTypes(tag);
         const ne = changeStyle(editorState, styleName);
         const nee = removeChars(ne, tag.length);
@@ -127,11 +120,21 @@ const CustomEditor: React.FC = () => {
   };
 
   const handleReturn = (e: any, editorState: EditorState) => {
-    reset();
     if (false) {
-      return "handled";
+      return "not-handled";
     }
-    return "not-handled";
+    setTag("");
+    const currentContent = editorState.getCurrentContent();
+    const selection = editorState.getSelection();
+
+    const newContent = Modifier.splitBlock(currentContent, selection);
+    const newEditorState = EditorState.push(
+      editorState,
+      newContent,
+      "split-block"
+    );
+    setEditorState(changeStyle(newEditorState, "unstyled"));
+    return "handled";
   };
 
   const saveContentToLocalStorage = () => {
@@ -141,7 +144,7 @@ const CustomEditor: React.FC = () => {
   };
 
   useEffect(() => {
-    reset();
+    setTag("");
   }, []);
 
   return (
@@ -149,15 +152,26 @@ const CustomEditor: React.FC = () => {
       <div className="w-full h-full py-4 flex flex-col justify-between items-stretch">
         <div className="flex flex-row justify-between items-center border-b mx-12 px-4">
           <div />
-          <h1>Demo Editor By Jash Agrawal</h1>
-          <button
-            className="px-8 py-2 border border-white rounded-xl my-4"
+          <h1 className="text-violet-600">
+            Demo Editor By{" "}
+            <span className="font-bold text-2xl  text-white">Jash Agrawal</span>
+          </h1>
+
+          <a
             onClick={() => saveContentToLocalStorage()}
+            href="#_"
+            className="relative p-0.5 inline-flex items-center justify-center font-bold overflow-hidden group rounded-md my-4"
           >
+            <span className="w-full h-full bg-gradient-to-br from-[#ff8a05] via-[#ff5478] to-[#ff00c6] group-hover:from-[#ff00c6] group-hover:via-[#ff5478] group-hover:to-[#ff8a05] absolute"></span>
+            <span className="relative px-4 py-2 transition-all ease-out bg-gray-900 rounded-md group-hover:bg-opacity-0 duration-400">
+              <span className="relative text-white text-sm">Save</span>
+            </span>
+          </a>
+          {/* <button className="px-8 py-2 border border-white rounded-xl my-4">
             Save
-          </button>
+          </button> */}
         </div>
-        <div className="border rounded-xl border-white h-96 mx-12 p-4">
+        <div className="border rounded-xl border-white h-full mt-12 mx-12 p-4">
           <Editor
             placeholder="Start typing from here"
             editorState={editorState}
