@@ -19,7 +19,7 @@ const CustomEditor: React.FC = () => {
     const savedContent = localStorage.getItem("editorContent");
     if (savedContent) {
       const contentState = convertFromRaw(
-        JSON.parse(savedContent) as RawDraftContentState
+        JSON.parse(savedContent) as RawDraftContentState,
       );
       return EditorState.createWithContent(contentState);
     }
@@ -60,12 +60,12 @@ const CustomEditor: React.FC = () => {
         anchorOffset: 0,
         focusOffset: blockText.length,
       }),
-      blockText.slice(length) // Remove the trigger character and space
+      blockText.slice(length), // Remove the trigger character and space
     );
     const newEditorState = EditorState.push(
       editorState,
       newContent,
-      "remove-range"
+      "remove-range",
     );
     return newEditorState;
     // setEditorState(newEditorState);
@@ -80,7 +80,7 @@ const CustomEditor: React.FC = () => {
     const newEditorState = EditorState.push(
       editorState,
       newContent,
-      "change-block-data"
+      "change-block-data",
     );
     return newEditorState;
     // setEditorState(newEditorState);
@@ -131,7 +131,7 @@ const CustomEditor: React.FC = () => {
     const newEditorState = EditorState.push(
       editorState,
       newContent,
-      "split-block"
+      "split-block",
     );
     setEditorState(changeStyle(newEditorState, "unstyled"));
     return "handled";
@@ -152,9 +152,9 @@ const CustomEditor: React.FC = () => {
       <div className="w-full h-full py-4 flex flex-col justify-between items-stretch">
         <div className="flex flex-row justify-between items-center border-b mx-12 px-4">
           <div />
-          <h1 className="text-violet-600">
+          <h1 className="text-violet-600 text-md">
             Demo Editor By{" "}
-            <span className="font-bold text-2xl  text-white">Jash Agrawal</span>
+            <span className="font-bold text-xl  text-white">Jash Agrawal</span>
           </h1>
 
           <div
